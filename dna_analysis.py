@@ -29,7 +29,7 @@ def plot_top_promoter_kmers(top_kmers,top_kmer_counts,top=10):
     source = ColumnDataSource(data=dict(top_kmers=top_kmers, top_kmer_counts=top_kmer_counts, color=np.flip(Plasma8)))
 
     p = figure(x_range=top_kmers, title="Top Promoter Kmers",
-               toolbar_location=None, tools="", width=650, height=450)
+               toolbar_location=None, tools="", width=680, height=450)
 
     p.vbar(x='top_kmers', top='top_kmer_counts', width=0.75, color='color', source=source)
 
@@ -56,7 +56,7 @@ def plot_promoter_percent(df):
     source = ColumnDataSource(data=dict(categories=categories, counts=counts, color=Spectral4))
 
     p = figure(x_range=categories, title="",
-               toolbar_location=None, tools="", width=350, height=450)
+               toolbar_location=None, tools="", width=450, height=450)
 
     p.vbar(x='categories', top='counts', width=0.5, color='color', source=source)
 

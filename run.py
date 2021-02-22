@@ -453,30 +453,40 @@ async def promoter_model_predict(q):
     start_time_main = time.time()
 
     if q.client.models_loaded is None:
-        await progress_page(q, message="Loading models...")
+        q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                          items=[ui.progress(label="Loading models...")])
+        await q.page.save()
+        del q.page['progress']
         q.client.promoter_inference=Promoter_Inference.Promoter_Inference()
         q.client.promoter_inference.load_models('Promoter_Inference/best_weights')
+        q.client.models_loaded=True
 
     # Getting predictions
-    if q.client.predictions is None:
-        minimum_required_features = ["sequence"]
-        await progress_page(q,message="Getting predictions...")
-        q.client.predictions, q.client.top_kmers, q.client.top_kmer_counts = \
-        q.client.promoter_inference.predict(q.client.train.loc[:, minimum_required_features])
-        q.client.predictions.to_csv('temp/predictions.csv', index=False)
-        q.client.predictions_path, = await q.site.upload(['temp/predictions.csv'])
+    #if q.client.predictions is None:
+    minimum_required_features = ["sequence"]
+    #await progress_page(q,message="Getting predictions...")
+
+    q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                      items=[ui.progress(label="Getting predictions...")])
+    await q.page.save()
+    del q.page['progress']
+
+    q.client.predictions, q.client.top_kmers, q.client.top_kmer_counts = \
+    q.client.promoter_inference.predict(q.client.promoter_data.loc[:, minimum_required_features])
+    q.client.predictions.to_csv('temp/predictions.csv', index=False)
+    q.client.predictions_path, = await q.site.upload(['temp/predictions.csv'])
 
     elapsed_time = time.time() - start_time_main
     print(f"minutes passed for getting predictions: {round(elapsed_time/60, 2)}")
-    data_text = '''=
-Click [here]({{predictions}}) to download the predictions.
-'''
-    q.page['text'] = ui.markdown_card(
-            box='4 8 3 1',
-            title='',
-            content=data_text,
-            data=dict(predictions=q.client.predictions_path)
-        )
+#     data_text = '''=
+# Click [here]({{predictions}}) to download the predictions.
+# '''
+#     q.page['text'] = ui.markdown_card(
+#             box='4 5 3 1',
+#             title='',
+#             content=data_text,
+#             data=dict(predictions=q.client.predictions_path)
+#         )
 
 
 async def predict_tab(q):
@@ -496,12 +506,99 @@ async def predict_promoter_tab(q):
     else:
         k_value=10
 
-    q.page['predict_promoter_tab'] = ui.form_card(box='1 2 3 6', items=[
+    if q.client.promoter_data is None:
+        q.client.promoter_data=q.client.train
+
+
+
+    #if q.client.predictions is not None:
+    q.page['predict_promoter_tab'] = ui.form_card(box='1 2 3 11', items=[
         ui.text_m(f'In this section, you can classify DNA promoters'),
+        ui.text_m('You can upload a local dataset to classify with the Nucleic Transformer.'),
+        ui.file_upload(name='promoter_user_files', label='Upload', multiple=False),
         ui.text_m('In addition, you can also visualize the top kmers extracted based on Nucleic Trasnformer\'s self-attention weights'),
         ui.slider(name='promoter_topk', label='Select number of top kmers to visualize', min=3, max=10, step=1, value=k_value),
         ui.button(name='promoterdataprediction', label='Predict', primary=True)
     ])
+#     else:
+#         download_data_text = '''=
+# Click [here]({{predictions}}) to download the predictions.
+# '''
+#         q.page['predict_promoter_tab'] = ui.form_card(box='1 2 3 11', items=[
+#             ui.text_m(f'In this section, you can classify DNA promoters'),
+#             ui.text_m('You can upload a local dataset to classify with the Nucleic Transformer.'),
+#             ui.file_upload(name='promoter_user_files', label='Upload', multiple=False),
+#             ui.text_m('In addition, you can also visualize the top kmers extracted based on Nucleic Trasnformer\'s self-attention weights'),
+#             ui.slider(name='promoter_topk', label='Select number of top kmers to visualize', min=3, max=10, step=1, value=k_value),
+#             ui.button(name='promoterdataprediction', label='Predict', primary=True),
+#             ui.text_m(download_data_text,data=dict(predictions=q.client.predictions_path))
+#         ])
+
+#     if q.client.predictions is not None:
+#         download_data_text = '''=
+# Click [here]({{predictions}}) to download the predictions.
+# '''
+#         q.page['text'] = ui.markdown_card(
+#                 box='4 6 9 1',
+#                 title='',
+#                 content=download_data_text,
+#                 data=dict(predictions=q.client.predictions_path)
+#             )
+
+
+    #if q.client.promoter_data is not None:
+
+    data_items = [ui.text_m(f'Loaded file "{q.client.file_name}" has '
+                            f'**{q.client.promoter_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+                  make_ui_table(q.client.promoter_data, data_display_max_nrows)]
+    q.page['promoter_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+
+    if 'promoter_data_view' not in q.client.all_pages:
+        q.client.all_pages.append('promoter_data_view')
+
+    if q.client.predictions is not None:
+
+        download_data_text = '''=
+Inference complete! Click [here]({{predictions}}) to download the predictions! Look below for visualization of promoter composition and top kmers!
+'''
+        q.page['download_predictions'] = ui.markdown_card(
+                box='4 6 9 1',
+                title='',
+                content=download_data_text,
+                data=dict(predictions=q.client.predictions_path)
+            )
+        q.client.promoter_data_predictions_seq_length= plot_promoter_percent(q.client.predictions)
+
+        q.page['plot_promoters'] = ui.frame_card(
+            box='4 7 4 6',
+            title='How many promoters/non-promoters are in the dataset',
+            content=q.client.promoter_data_predictions_seq_length
+        )
+
+        if 'plot_promoters' not in q.client.all_pages:
+            q.client.all_pages.append('plot_promoters')
+
+        q.client.promoter_topk_plot=plot_top_promoter_kmers(q.client.top_kmers, q.client.top_kmer_counts, q.client.promoter_topk)
+
+
+
+        q.page['plot_promoter_kmers'] = ui.frame_card(
+            box='8 7 5 6',
+            title='Top promoter kmers extracted from attention weights',
+            content=q.client.promoter_topk_plot
+        )
+
+
+        if 'plot_promoter_kmers' not in q.client.all_pages:
+            q.client.all_pages.append('plot_promoter_kmers')
+
+
+
+    # try:
+    #     del q.page['data_view']
+    # except:
+    #     pass
+
 
 # async def predict_promoter_tab(q):
 #     q.page['predict_promoter_tab'] = ui.form_card(box='1 2 3 10', items=[
@@ -682,6 +779,46 @@ async def main(q: Q):
             q.page['error'] = ui.form_card(box='1 2 6 2',
                 items=display_error(error_type="upload"))
 
+    if q.args.promoter_user_files:
+        #await delete_pages(q)
+        try:
+            print('location: upload data')
+            # Make the file available locally and store file path in client context
+            q.client.local_path = await q.site.download(q.args.promoter_user_files[0], '.')
+            q.client.link_to_file = q.args.promoter_user_files[0]
+
+            if q.client.link_to_file.endswith('.json'):
+                q.client.promoter_data = pd.read_json(q.client.local_path, lines=True)
+            elif q.client.link_to_file.endswith('.csv'):
+                q.client.promoter_data = pd.read_csv(q.client.local_path)
+            q.client.fs_columns = list(q.client.promoter_data.columns.values.tolist())
+            q.client.file_name = os.path.split(q.client.local_path)[1]
+            q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
+            q.client.promoter_data["sequence_length"] = q.client.promoter_data["sequence"].apply(lambda seq: len(seq))
+            print(f"data shape: {q.client.promoter_data.shape}")
+
+            data_items = [ui.text_m(f'Loaded file "{q.client.file_name}" has '
+                                    f'**{q.client.promoter_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+                          make_ui_table(q.client.promoter_data, data_display_max_nrows)]
+            q.page['promoter_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+
+            if 'promoter_data_view' not in q.client.all_pages:
+                q.client.all_pages.append('promoter_data_view')
+
+            if q.client.predictions is not None:
+                q.client.predictions=None
+                del q.page['plot_promoters']
+                del q.page['plot_promoter_kmers']
+                del q.page['download_predictions']
+
+        #except Exception as e: print(e)
+        except:
+            await delete_pages(q, keep_nav=True)
+            q.page['error'] = ui.form_card(box='1 2 6 2',
+                items=display_error(error_type="upload"))
+
+
+
     elif q.client.local_path is None:
         #q.client.local_path = "stanford-covid-vaccine/train_small.json"
         q.client.local_path = "Promoter_Inference/promoter_small.csv"
@@ -826,20 +963,30 @@ Click [here]({{predictions}}) to download the custom predictions. You can also d
         #await inference_tool.load_models('Promoter_Inference/best_weights')
         #await inference_tool.predict('Promoter_Inference/promoter_small.csv')
 
-        q.client.promoter_data_predictions_seq_length= plot_promoter_percent(q.client.predictions)
-        q.page['plot_promoters'] = ui.frame_card(
-            box='4 2 3 6',
-            title='How many promoters/non-promoters are in the dataset',
-            content=q.client.promoter_data_predictions_seq_length
-        )
-
-        q.client.promoter_topk_plot=plot_top_promoter_kmers(q.client.top_kmers, q.client.top_kmer_counts, q.client.promoter_topk)
-
-        q.page['plot_promoter_kmers'] = ui.frame_card(
-            box='7 2 5 6',
-            title='Top promoter kmers extracted from attention weights',
-            content=q.client.promoter_topk_plot
-        )
+        # q.client.promoter_data_predictions_seq_length= plot_promoter_percent(q.client.predictions)
+        #
+        # q.page['plot_promoters'] = ui.frame_card(
+        #     box='4 7 3 6',
+        #     title='How many promoters/non-promoters are in the dataset',
+        #     content=q.client.promoter_data_predictions_seq_length
+        # )
+        #
+        # if 'plot_promoters' not in q.client.all_pages:
+        #     q.client.all_pages.append('plot_promoters')
+        #
+        # q.client.promoter_topk_plot=plot_top_promoter_kmers(q.client.top_kmers, q.client.top_kmer_counts, q.client.promoter_topk)
+        #
+        #
+        #
+        # q.page['plot_promoter_kmers'] = ui.frame_card(
+        #     box='7 7 5 6',
+        #     title='Top promoter kmers extracted from attention weights',
+        #     content=q.client.promoter_topk_plot
+        # )
+        #
+        #
+        # if 'plot_promoter_kmers' not in q.client.all_pages:
+        #     q.client.all_pages.append('plot_promoter_kmers')
 
 
     elif q.args["#"]:
