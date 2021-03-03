@@ -65,6 +65,10 @@ class RNA_Inference():
     def predict(self, sequence):
         bp_matrix_seq, structures, loops=generate_RNA_features(sequence)
 
+        input_features={'bpps':bp_matrix_seq,
+                        'structures':structures,
+                        'loops':loops}
+
         inputs=preprocess_inputs(sequence, structures, loops)
         #print(inputs.shape)
         outputs=[]
@@ -101,7 +105,7 @@ class RNA_Inference():
         # print(aws.shape)
         # exit()
 
-        return outputs, aws
+        return outputs, aws, input_features
 
 
 #code testing here

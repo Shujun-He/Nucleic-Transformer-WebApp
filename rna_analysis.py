@@ -62,6 +62,14 @@ def get_unseq_data(df, target_columns):
 
     return final_inputs
 
+def plot_aw(aw,size=500):
+    p = figure(title="", width=size, height=size)
+    p.image(image=[aw], x=0, y=0, dw=2, dh=2, palette="Spectral11")
+
+
+    html = file_html(p, CDN, "plot")
+    return html
+
 def position_based_plot(unseq_df,target_columns,size=650):
     p = figure(title="", x_axis_label='sequence position', y_axis_label='mean_by_seqposition',width=size, height=size)
     for i, col in enumerate(target_columns):
@@ -75,6 +83,21 @@ def position_based_plot(unseq_df,target_columns,size=650):
         point_policy="follow_mouse"))
     html = file_html(p, CDN, "plot")
     return html
+
+def position_based_plot_single(values,target_columns,size=650):
+    p = figure(title="", x_axis_label='sequence position', y_axis_label='mean_by_seqposition',width=int(size*2.5), height=size)
+    for i, col in enumerate(target_columns):
+        g = values[:,i]
+        x = np.arange(len(g))
+        y = g
+        p.line(x, y, legend_label=col, line_width=2, line_color=colorlist[i % 6])
+
+    p.add_tools(HoverTool(
+        mode="mouse",
+        point_policy="follow_mouse"))
+    html = file_html(p, CDN, "plot")
+    return html
+
 
 def sequence_length_counts(df,seq_column="sequence"):
     seq_list = df[seq_column].apply(lambda x: len(x))

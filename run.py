@@ -18,9 +18,10 @@ import time
 os.environ["ARNIEFILE"] = f"arnie.conf"
 
 
-#from rna_analysis import *
+from rna_analysis import *
 from dna_analysis import *
 import Promoter_Inference
+import RNA_Inference
 #from model_prediction import load_models,bpps_path,get_prediction_df_dict,bpps_check
 
 
@@ -43,7 +44,7 @@ all_pages = ['nav','home', 'upload', 'example', 'infoboard1', 'image0', 'image1'
                  "plot_seqpos","plot_count",'plot_features0','plot_features1','plot_features2','plot_features3','text_sub','predict_tab','predict_promoter_tab']
 
 
-image_size = 4
+image_size = 6
 number_of_plots_in_a_row = 3
 plot_height = 5
 plot_width = 3
@@ -58,6 +59,7 @@ def get_image(file_name = "image1"):
 
     img = mpimg.imread(f'temp/{file_name}.png')
     plt.imshow(img)
+    plt.axis('off')
     plt.savefig(buf, format='png')
     buf.seek(0)
     image = base64.b64encode(buf.read()).decode('utf-8')
@@ -129,7 +131,8 @@ async def display_nav(q: Q):
         items=[
             ui.tab(name='#home', label='Home'),
             ui.tab(name='#promoterprediction', label='Promoter Classification'),
-            ui.tab(name='#uploaddataset', label='Upload Dataset')
+            ui.tab(name='#virusprediction', label='Virus Prediction'),
+            ui.tab(name='#rnaprediction', label='RNA Degradation Prediction'),
         ],
         link=False
     )
@@ -198,10 +201,10 @@ async def promoter_model_predict(q):
     await q.page.save()
     del q.page['progress']
 
-    q.client.predictions, q.client.top_kmers, q.client.top_kmer_counts = \
+    q.client.promoter_predictions, q.client.top_kmers, q.client.top_kmer_counts = \
     q.client.promoter_inference.predict(q.client.promoter_data.loc[:, minimum_required_features])
-    q.client.predictions.to_csv('temp/predictions.csv', index=False)
-    q.client.predictions_path, = await q.site.upload(['temp/predictions.csv'])
+    q.client.promoter_predictions.to_csv('temp/promoter_predictions.csv', index=False)
+    q.client.predictions_path, = await q.site.upload(['temp/promoter_predictions.csv'])
 
     elapsed_time = time.time() - start_time_main
     print(f"minutes passed for getting predictions: {round(elapsed_time/60, 2)}")
@@ -241,24 +244,27 @@ async def predict_promoter_tab(q):
     if 'promoter_data_view' not in q.client.all_pages:
         q.client.all_pages.append('promoter_data_view')
 
-    if q.client.predictions is not None:
+    if q.client.promoter_predictions is not None:
 
         download_data_text = '''=
 Inference complete! Click [here]({{predictions}}) to download the predictions! Look below for visualization of promoter composition and top kmers!
 '''
-        q.page['download_predictions'] = ui.markdown_card(
+        q.page['download_promoter_predictions'] = ui.markdown_card(
                 box='4 6 9 1',
                 title='',
                 content=download_data_text,
                 data=dict(predictions=q.client.predictions_path)
             )
-        q.client.promoter_data_predictions_seq_length= plot_promoter_percent(q.client.predictions)
+        q.client.promoter_data_predictions_seq_length= plot_promoter_percent(q.client.promoter_predictions)
 
         q.page['plot_promoters'] = ui.frame_card(
             box='4 7 4 6',
             title='How many promoters/non-promoters are in the dataset',
             content=q.client.promoter_data_predictions_seq_length
         )
+
+        if 'download_promoter_predictions' not in q.client.all_pages:
+            q.client.all_pages.append('download_promoter_predictions')
 
         if 'plot_promoters' not in q.client.all_pages:
             q.client.all_pages.append('plot_promoters')
@@ -276,6 +282,124 @@ Inference complete! Click [here]({{predictions}}) to download the predictions! L
 
         if 'plot_promoter_kmers' not in q.client.all_pages:
             q.client.all_pages.append('plot_promoter_kmers')
+
+async def predict_rna_tab(q):
+    ui_list_custom = [
+        ui.text_m(f'In this section, you can directly type sequence infos and get predictions for the following targets: {target_columns}.'),
+        #ui.text_m(f'Then you can both generate RNA plot and model predictions '),
+        ui.textbox(name='rna_sequence_textbox', label='Sequence', value="GGAAAAGCUCUAAUAACAGGAGACUAGGACUACGUAUUUCUAGGUAACUGGAAUAACCCAUACCAGCAGUUAGAGUUCGCUCUAACAAAAGAAACAACAACAACAAC"),
+        ui.button(name='predict_rna', label='Predict', primary=True),
+        ui.text_s(f'You can enter in following formats: '),
+        ui.text_s(f'Sequence characters: A,U,C,G'),
+    ]
+    q.page['text'] = ui.form_card( box='1 2 3 4',items=ui_list_custom )
+
+    if q.args.rna_sequence_textbox is not None:
+        q.client.rna_sequence_textbox=q.args.rna_sequence_textbox
+
+    if q.client.rna_predictions is not None and q.client.rna_sequence_textbox is not None:
+
+        # q.client.rna_drawn_html_pos = position_based_plot_single(q.client.rna_predictions, target_columns, size=500)
+        # q.page['plot_seqpos'] = ui.frame_card(
+        #     box='4 2 9 4',
+        #     title='Average prediction value plots for each sequence position.',
+        #     content=q.client.rna_predictions_html_pos
+        # )
+
+
+
+        q.client.rna_predictions_html_pos = position_based_plot_single(q.client.rna_predictions, target_columns, size=500)
+        q.page['plot_seqpos'] = ui.frame_card(
+            box='4 7 9 6',
+            title='Average prediction value plots for each sequence position.',
+            content=q.client.rna_predictions_html_pos
+        )
+
+        draw_struct(q.client.rna_sequence_textbox, q.client.rna_input_features['structures'][0], c=None, ax=None,file_name='rna_plot')
+        image = get_image(file_name='rna_plot')
+
+        #image_path_list = [f"temp/{custom_id}.png"]
+        #compress(image_path_list)
+        # Deleting previously generated plots after compressing them.
+        # for path in image_path_list:
+        #     os.remove(path)
+
+        #q.client.plots_path, = await q.site.upload([f'temp/plots.zip'])
+
+        q.page['image1'] = ui.image_card(
+            box=f'4 2 4 5',
+            title=f'RNA Visualization',
+            type='png',
+            image=image)
+
+        q.client.rna_aw_html = plot_aw(q.client.rna_aw, size=500)
+
+        q.page['aw_image'] = ui.frame_card(
+            box=f'8 2 5 5',
+            title=f'Attetion weight of the Nucleic Transformer',
+            content=q.client.rna_aw_html)
+
+        q.client.all_pages.append("image1")
+        q.client.all_pages.append("aw_image")
+
+        download_data_text = '''=
+        Inference complete! Click [here]({{predictions}}) to download the predictions!
+        '''
+        # q.page['download_rna_predictions'] = ui.markdown_card(
+        #         box='8 2 5 5',
+        #         title='',
+        #         content=download_data_text,
+        #         data=dict(predictions=q.client.rna_predictions_path)
+        #     )
+
+        download_data_text = '''=
+Inference complete! Click [here]({{predictions}}) to download the predictions!
+'''
+        q.page['download_promoter_predictions'] = ui.markdown_card(
+                box='1 6 3 1',
+                title='',
+                content=download_data_text,
+                data=dict(predictions=q.client.rna_predictions_path)
+            )
+
+
+async def rna_model_predict(q):
+
+    # Loading models
+    start_time_main = time.time()
+
+    if q.client.rna_models_loaded is None:
+        q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                          items=[ui.progress(label="Loading models...")])
+        await q.page.save()
+        del q.page['progress']
+        q.client.rna_inference=RNA_Inference.RNA_Inference()
+        q.client.rna_inference.load_models('RNA_Inference/best_weights')
+        q.client.rna_models_loaded=True
+
+    # Getting predictions
+    #if q.client.predictions is None:
+    #minimum_required_features = ["sequence"]
+    #await progress_page(q,message="Getting predictions...")
+
+    q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                      items=[ui.progress(label="Getting predictions...")])
+    await q.page.save()
+    del q.page['progress']
+
+    q.client.rna_predictions, q.client.rna_aw, q.client.rna_input_features  = \
+    q.client.rna_inference.predict(q.args.rna_sequence_textbox)
+    q.client.rna_predictions_df=pd.DataFrame(columns=['position']+target_columns)
+    q.client.rna_predictions_df['position']=np.arange(len(q.client.rna_predictions))
+    q.client.rna_predictions_df[target_columns]=q.client.rna_predictions
+    q.client.rna_predictions_df.to_csv('temp/rna_predictions.csv', index=False)
+    q.client.rna_predictions_path, = await q.site.upload(['temp/rna_predictions.csv'])
+
+    #plt.imshow(q.client.rna_aw)
+    #plt.savefig('temp/aw.png',bbox_inches = 'tight',pad_inches = 0)
+
+    elapsed_time = time.time() - start_time_main
+    print(f"minutes passed for getting predictions: {round(elapsed_time/60, 2)}")
 
 
 async def home(q):
@@ -312,11 +436,22 @@ async def display_data_parameters_page(q,random_sample_disabled=True):
             #await predict_tab(q)
             # await delete_pages(q,keep_nav=True)
             # await predict_tab(q)
+    elif q.client.activetab == "virusprediction":
+            await delete_pages(q,keep_nav=True)
+            print('Line 604')
+            await predict_promoter_tab(q)
+    elif q.client.activetab == "rnaprediction":
+            await delete_pages(q,keep_nav=True)
+            print('Line 604')
+            await predict_rna_tab(q)
 
     elif q.client.activetab == "uploaddataset":
             await delete_pages(q,keep_nav=True)
             await display_file_upload(q)
 
+    elif q.client.activetab == "rnaprediction":
+            await delete_pages(q,keep_nav=True)
+            await predict_promoter_tab(q)
 
 
 
@@ -368,11 +503,11 @@ async def main(q: Q):
             if 'promoter_data_view' not in q.client.all_pages:
                 q.client.all_pages.append('promoter_data_view')
 
-            if q.client.predictions is not None:
-                q.client.predictions=None
+            if q.client.promoter_predictions is not None:
+                q.client.promoter_predictions=None
                 del q.page['plot_promoters']
                 del q.page['plot_promoter_kmers']
-                del q.page['download_predictions']
+                del q.page['download_promoter_predictions']
 
         #except Exception as e: print(e)
         except:
@@ -418,6 +553,12 @@ async def main(q: Q):
         await promoter_model_predict(q)
         print('line 815')
         await predict_promoter_tab(q)
+
+    elif q.args.predict_rna:
+        #q.client.promoter_topk = q.args.promoter_topk
+        await rna_model_predict(q)
+        print('line 815')
+        await predict_rna_tab(q)
 
 
     elif q.args["#"]:
