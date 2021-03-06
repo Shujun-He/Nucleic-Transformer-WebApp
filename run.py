@@ -22,6 +22,8 @@ from rna_analysis import *
 from dna_analysis import *
 import Promoter_Inference
 import RNA_Inference
+import Virus_Inference
+
 #from model_prediction import load_models,bpps_path,get_prediction_df_dict,bpps_check
 
 
@@ -122,6 +124,7 @@ async def delete_pages(q: Q,keep_nav=False):
         try:
             del q.page[page]
         except:
+            #print('some error')
             pass
 
 async def display_nav(q: Q):
@@ -130,7 +133,7 @@ async def display_nav(q: Q):
         box='3 1 9 1',
         items=[
             ui.tab(name='#home', label='Home'),
-            ui.tab(name='#promoterprediction', label='Promoter Classification'),
+            ui.tab(name='#promoter_prediction', label='Promoter Classification'),
             ui.tab(name='#virusprediction', label='Virus Prediction'),
             ui.tab(name='#rnaprediction', label='RNA Degradation Prediction'),
         ],
@@ -226,11 +229,15 @@ async def predict_promoter_tab(q):
     #if q.client.predictions is not None:
     q.page['predict_promoter_tab'] = ui.form_card(box='1 2 3 11', items=[
         ui.text_m(f'In this section, you can classify DNA promoters'),
-        ui.text_m('You can upload a local dataset to classify with the Nucleic Transformer.'),
+        ui.text_m('You can upload a local dataset to classify with the Nucleic Transformer. You need to put \
+        the sequences\
+        into a csv file with \'sequence\' as a column. We have uploaded a sample file for you so you can follow \
+        the format easily'),
         ui.file_upload(name='promoter_user_files', label='Upload', multiple=False),
-        ui.text_m('In addition, you can also visualize the top kmers extracted based on Nucleic Trasnformer\'s self-attention weights'),
+        ui.text_m('Aside from classifying promoters, you can also visualize the top kmers extracted based on \
+        Nucleic Trasnformer\'s self-attention weights'),
         ui.slider(name='promoter_topk', label='Select number of top kmers to visualize', min=3, max=10, step=1, value=k_value),
-        ui.button(name='promoterdataprediction', label='Predict', primary=True)
+        ui.button(name='predict_promoter', label='Predict', primary=True)
     ])
 
 
@@ -283,10 +290,123 @@ Inference complete! Click [here]({{predictions}}) to download the predictions! L
         if 'plot_promoter_kmers' not in q.client.all_pages:
             q.client.all_pages.append('plot_promoter_kmers')
 
+
+async def predict_virus_tab(q):
+    if q.client.virus_topk is not None:
+        k_value=q.client.virus_topk
+    else:
+        k_value=5
+
+    if q.client.virus_data is None:
+        q.client.virus_data=q.client.virus_data
+
+
+
+    #if q.client.predictions is not None:
+    q.page['predict_virus_tab'] = ui.form_card(box='1 2 3 11', items=[
+        ui.text_m(f'In this section, you can classify DNA virus'),
+        ui.text_m('You can upload a local dataset to classify with the Nucleic Transformer. You need to put \
+        the sequences\
+        into a csv file with \'sequence\' as a column. We have uploaded a sample file for you so you can follow \
+        the format easily'),
+        ui.file_upload(name='virus_user_files', label='Upload', multiple=False),
+        ui.text_m('In addition, you can also visualize the top kmers extracted based on Nucleic Trasnformer\'s self-attention weights'),
+        ui.slider(name='virus_topk', label='Select number of top kmers to visualize', min=2, max=6, step=1, value=k_value),
+        ui.button(name='predict_virus', label='Predict', primary=True)
+    ])
+
+
+    if 'predict_virus_tab' not in q.client.all_pages:
+        q.client.all_pages.append('predict_virus_tab')
+
+    #if q.client.promoter_data is not None:
+
+    data_items = [ui.text_m(f'Loaded file "{q.client.virus_file_name}" has '
+                            f'**{q.client.virus_data.shape[0]}** rows and **{q.client.virus_data.shape[1]}** features.\n\n'),
+                  make_ui_table(q.client.virus_data, data_display_max_nrows)]
+    q.page['virus_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+
+    if 'virus_data_view' not in q.client.all_pages:
+        q.client.all_pages.append('virus_data_view')
+
+    if q.client.virus_predictions is not None:
+
+        download_data_text = '''=
+Inference complete! Click [here]({{predictions}}) to download the predictions! Look below for visualization of virus composition and top kmers!
+'''
+        q.page['download_virus_predictions'] = ui.markdown_card(
+                box='4 6 9 1',
+                title='',
+                content=download_data_text,
+                data=dict(predictions=q.client.virus_predictions_path)
+            )
+        q.client.virus_data_predictions_seq_length= plot_virus_percent(q.client.virus_predictions)
+
+        q.page['plot_virus'] = ui.frame_card(
+            box='4 7 4 6',
+            title='How many virus/non-virus are in the dataset',
+            content=q.client.virus_data_predictions_seq_length
+        )
+
+        if 'download_virus_predictions' not in q.client.all_pages:
+            q.client.all_pages.append('download_virus_predictions')
+
+        if 'plot_virus' not in q.client.all_pages:
+            q.client.all_pages.append('plot_virus')
+        print(f'virus topk {q.client.virus_topk}')
+        q.client.promoter_topk_plot=plot_top_kmers(q.client.top_virus_kmers, q.client.top_virus_kmer_counts, q.client.virus_topk)
+
+
+
+        q.page['plot_virus_kmers'] = ui.frame_card(
+            box='8 7 5 6',
+            title='Top virus kmers extracted from attention weights',
+            content=q.client.promoter_topk_plot
+        )
+
+
+        if 'plot_virus_kmers' not in q.client.all_pages:
+            q.client.all_pages.append('plot_virus_kmers')
+
+
+async def virus_model_predict(q):
+
+    # Loading models
+    start_time_main = time.time()
+
+    if q.client.virus_models_loaded is None:
+        q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                          items=[ui.progress(label="Loading models...")])
+        await q.page.save()
+        del q.page['progress']
+        q.client.virus_inference=Virus_Inference.Virus_Inference()
+        q.client.virus_inference.load_models('Virus_Inference/best_weights')
+        q.client.virus_models_loaded=True
+
+    # Getting predictions
+    #if q.client.predictions is None:
+    minimum_required_features = ["sequence"]
+    #await progress_page(q,message="Getting predictions...")
+
+    q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                      items=[ui.progress(label="Getting predictions...")])
+    await q.page.save()
+    del q.page['progress']
+
+    q.client.virus_predictions, q.client.top_virus_kmers, q.client.top_virus_kmer_counts = \
+    q.client.virus_inference.predict(q.client.virus_data.loc[:, minimum_required_features])
+    q.client.virus_predictions.to_csv('temp/virus_predictions.csv', index=False)
+    q.client.virus_predictions_path, = await q.site.upload(['temp/virus_predictions.csv'])
+
+    elapsed_time = time.time() - start_time_main
+    print(f"minutes passed for getting predictions: {round(elapsed_time/60, 2)}")
+
+
 async def predict_rna_tab(q):
     ui_list_custom = [
-        ui.text_m(f'In this section, you can directly type sequence infos and get predictions for the following targets: {target_columns}.'),
-        #ui.text_m(f'Then you can both generate RNA plot and model predictions '),
+        ui.text_m(f'In this section, you can directly type a sequence and get predictions for the following targets: {target_columns}.'),
+        ui.text_m(f'Additional features will be generated automatically and we will visulize the RNA folding and \
+        attention weights of the Nucleic Transformer for you as well'),
         ui.textbox(name='rna_sequence_textbox', label='Sequence', value="GGAAAAGCUCUAAUAACAGGAGACUAGGACUACGUAUUUCUAGGUAACUGGAAUAACCCAUACCAGCAGUUAGAGUUCGCUCUAACAAAAGAAACAACAACAACAAC"),
         ui.button(name='predict_rna', label='Predict', primary=True),
         ui.text_s(f'You can enter in following formats: '),
@@ -409,8 +529,8 @@ The Nucleic Transformer models are deep learning models developed to study and u
 and [open-sourced code on github](https://github.com/Shujun-He/Nucleic-Transformer). The model archiecture is simple but effective, outperforming previous results in DNA promoters/virus classification; additionally,
 we used it to to place 7th in the [OpenVaccine challenge](https://www.kaggle.com/c/stanford-covid-vaccine).
 
-Throughout the app, you will be able to use pretrained Nucleic Transformer models to classify DNA promoters/virus and quantify RNA degradation. Additionally,
-Nucleic Transformer is very interpretible as you will be able to visualize the attention of the neural networks and understand what the neural network is looking at/for while making predictions.
+Throughout the app, you will be able to use pretrained Nucleic Transformer models to classify DNA promoters/virus and quantify RNA degradation. Also,
+Nucleic Transformer is very interpretible so you will be able to visualize the attention of the neural networks and understand what the neural network is looking at/for while making predictions.
 This also allows extraction of k-mer promoter/viral motifs and informed decision making when using these neural networks.
 
 ![Plot]({q.app.home_image_1_url})
@@ -429,29 +549,20 @@ async def display_data_parameters_page(q,random_sample_disabled=True):
     if q.client.activetab == "home":
             await delete_pages(q,keep_nav=True)
             await home(q)
-    elif q.client.activetab == "promoterprediction":
+    elif q.client.activetab == "promoter_prediction":
             await delete_pages(q,keep_nav=True)
-            print('Line 604')
             await predict_promoter_tab(q)
-            #await predict_tab(q)
-            # await delete_pages(q,keep_nav=True)
-            # await predict_tab(q)
+            print('line 546')
+
+            #await predict_virus_tab(q)
     elif q.client.activetab == "virusprediction":
             await delete_pages(q,keep_nav=True)
-            print('Line 604')
-            await predict_promoter_tab(q)
+            await predict_virus_tab(q)
     elif q.client.activetab == "rnaprediction":
             await delete_pages(q,keep_nav=True)
-            print('Line 604')
             await predict_rna_tab(q)
 
-    elif q.client.activetab == "uploaddataset":
-            await delete_pages(q,keep_nav=True)
-            await display_file_upload(q)
 
-    elif q.client.activetab == "rnaprediction":
-            await delete_pages(q,keep_nav=True)
-            await predict_promoter_tab(q)
 
 
 
@@ -515,11 +626,9 @@ async def main(q: Q):
             q.page['error'] = ui.form_card(box='1 2 6 2',
                 items=display_error(error_type="upload"))
 
-
-
     elif q.client.local_path is None:
         #q.client.local_path = "stanford-covid-vaccine/train_small.json"
-        q.client.local_path = "Promoter_Inference/promoter_small.csv"
+        q.client.local_path = "Promoter_Inference/promoter_sample.csv"
         #q.client.train = pd.read_json(q.client.local_path, lines=True)
         q.client.train = pd.read_csv(q.client.local_path)
         q.client.fs_columns = list(q.client.train.columns.values.tolist())
@@ -533,33 +642,85 @@ async def main(q: Q):
         await display_nav(q)
         #await display_file_upload(q)
 
-    elif q.args.upload_data:
-        await delete_pages(q,keep_nav=True)
-        q.client.activetab = "uploaddataset"
+    if q.args.virus_user_files:
+        #await delete_pages(q)
+        try:
+            print('location: upload data')
+            # Make the file available locally and store file path in client context
+            q.client.local_virus_file_path = await q.site.download(q.args.virus_user_files[0], '.')
+            q.client.link_to_virus_file = q.args.virus_user_files[0]
+
+            if q.client.link_to_file.endswith('.json'):
+                q.client.virus_data = pd.read_json(q.client.virus_user_files, lines=True)
+            elif q.client.link_to_file.endswith('.csv'):
+                q.client.virus_data = pd.read_csv(q.client.virus_user_files)
+            q.client.fs_columns = list(q.client.virus_data.columns.values.tolist())
+            q.client.virus_file_name = os.path.split(q.client.virus_user_files)[1]
+            q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
+            q.client.virus_data["sequence_length"] = q.client.virus_data["sequence"].apply(lambda seq: len(seq))
+            print(f"data shape: {q.client.virus_data.shape}")
+
+            data_items = [ui.text_m(f'Loaded file "{q.client.virus_file_name}" has '
+                                    f'**{q.client.virus_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+                          make_ui_table(q.client.virus_data, data_display_max_nrows)]
+            q.page['virus_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+
+            if 'virus_data_view' not in q.client.all_pages:
+                q.client.all_pages.append('virus_data_view')
+
+            if q.client.virus_predictions is not None:
+                q.client.virus_predictions=None
+                del q.page['plot_virus']
+                del q.page['plot_virus_kmers']
+                del q.page['download_virus_predictions']
+
+        #except Exception as e: print(e)
+        except:
+            await delete_pages(q, keep_nav=True)
+            q.page['error'] = ui.form_card(box='1 2 6 2',
+                items=display_error(error_type="upload"))
+
+    elif q.client.local_virus_file_path is None:
+        #q.client.local_path = "stanford-covid-vaccine/train_small.json"
+        q.client.local_virus_file_path = "Virus_Inference/virus_sample.csv"
+        #q.client.train = pd.read_json(q.client.local_path, lines=True)
+        q.client.virus_data = pd.read_csv(q.client.local_virus_file_path)
+        q.client.fs_columns = list(q.client.train.columns.values.tolist())
+        q.client.virus_file_name = os.path.split(q.client.local_virus_file_path)[1]
+        q.client.activetab = "home"
+        q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
+        q.client.virus_data["sequence_length"] = q.client.virus_data["sequence"].apply(lambda seq: len(seq))
+
+
         await display_data_parameters_page(q)
+        await display_nav(q)
+        #await display_file_upload(q)
 
 
 
-    elif q.args.restart:
-        await delete_pages(q, keep_nav=True)
-        # Make sure that first active tab is dataproperties.
-        q.client.activetab = "plotrnas"
-        await display_data_parameters_page(q)
+
+
+
 
 
         #This part is for controlling active tab page.
-    elif q.args.promoterdataprediction:
+    elif q.args.predict_promoter:
         q.client.promoter_topk = q.args.promoter_topk
         await promoter_model_predict(q)
         print('line 815')
         await predict_promoter_tab(q)
 
     elif q.args.predict_rna:
-        #q.client.promoter_topk = q.args.promoter_topk
+        #q.client.virus_topk = q.args.virus_topk
         await rna_model_predict(q)
         print('line 815')
         await predict_rna_tab(q)
 
+    elif q.args.predict_virus:
+        q.client.virus_topk = q.args.virus_topk
+        await virus_model_predict(q)
+        print('line 815')
+        await predict_virus_tab(q)
 
     elif q.args["#"]:
         q.client.activetab = q.args["#"]
@@ -573,4 +734,4 @@ async def main(q: Q):
 
 
 if __name__ == '__main__':
-    listen('/explorna', main)
+    listen('/nucleictransformer', main)
