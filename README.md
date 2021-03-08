@@ -8,14 +8,17 @@ Clone the repo to your local.
 Before everything make sure that wave is ready:
 Download and extract [Wave](https://github.com/h2oai/wave/releases/tag/v0.10.0). Start the server with
 
-```bash
 ./waved
-```
+
 This needs to keep running for the app to work. So leave the terminal with waved runinig and open a new one to do the rest of the setup
 
-**1.** Download and install rnasoft from: http://www.rnasoft.ca/download.html
+**1.** Download and install rnasoft from: http://www.rnasoft.ca/download.html. 
 
-**Imporant**: 
+To extract:
+
+```bash
+tar -xzvf MultiRNAFold-2.1.tar.gz
+```
 
 **2.** Open terminal in the cloned folder and run: <code>make setup</code>
 
