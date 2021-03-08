@@ -12,7 +12,7 @@ Download and extract [Wave](https://github.com/h2oai/wave/releases/tag/v0.10.0).
 
 This needs to keep running for the app to work. So leave the terminal with waved runinig and open a new one to do the rest of the setup
 
-**1.** Download and install rnasoft from: http://www.rnasoft.ca/download.html. 
+**1.** Download and install rnasoft from: http://www.rnasoft.ca/download/MultiRNAFold-2.1.tar.gz
 
 To extract:
 ```bash
