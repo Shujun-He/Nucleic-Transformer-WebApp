@@ -16,6 +16,12 @@ cd $HOME/wave
 
 This needs to be running for the app to work. So leave the terminal with waved running and open a new one to do the rest of the setup
 
+**0.** Install perl 
+
+```bash
+curl -L http://xrl.us/installperlnix | bash
+```
+
 **1.** Open terminal in the cloned folder and run: <code>make setup</code>
 
 **2.** Then run the bash file: for Ubuntu: <code>bash Ubuntu_setup_draw_rna.sh</code> , for Mac: <code>bash MacOS_setup_draw_rna.sh</code>
