@@ -14,7 +14,7 @@ cd $HOME/wave
 ./waved
 ```
 
-This needs to keep running for the app to work. So leave the terminal with waved runinig and open a new one to do the rest of the setup
+This needs to be running for the app to work. So leave the terminal with waved running and open a new one to do the rest of the setup
 
 **1.** Open terminal in the cloned folder and run: <code>make setup</code>
 
