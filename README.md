@@ -5,7 +5,9 @@ Based on https://github.com/fatihozturkh2o/explorna_wave
 Clone the repo to your local.
 
 Before everything make sure that wave is ready. 
-[How to install](https://h2oai.github.io/wave/docs/installation/) Start the server with
+How to install: (https://h2oai.github.io/wave/docs/installation/ 
+
+Start the server with
 
 ./waved
 
