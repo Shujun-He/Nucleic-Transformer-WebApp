@@ -23,4 +23,4 @@ This needs to keep running for the app to work. So leave the terminal with waved
 
 **4.** Now you are ready to run the app: <code>./venv/bin/python run.py</code>   
 
-**5.** Go to <code>http://localhost:10101/explorna</code> in your browser.
+**5.** Go to <code>http://localhost:10101/nucleictransformer</code> in your browser.
