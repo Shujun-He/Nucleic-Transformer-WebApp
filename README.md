@@ -9,7 +9,10 @@ How to install: (https://h2oai.github.io/wave/docs/installation/
 
 Start the server with
 
+```bash
+cd $HOME/wave
 ./waved
+```
 
 This needs to keep running for the app to work. So leave the terminal with waved runinig and open a new one to do the rest of the setup
 
