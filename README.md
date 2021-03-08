@@ -1,7 +1,6 @@
 # Nucleic-Transformer-WebApp
 
-Address: http://localhost:10101/nucleictransformer
-
+Based on https://github.com/fatihozturkh2o/explorna_wave
 
 Clone the repo to your local.
 
