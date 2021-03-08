@@ -15,7 +15,6 @@ This needs to keep running for the app to work. So leave the terminal with waved
 **1.** Download and install rnasoft from: http://www.rnasoft.ca/download.html. 
 
 To extract:
-
 ```bash
 tar -xzvf MultiRNAFold-2.1.tar.gz
 ```
