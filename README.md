@@ -16,7 +16,7 @@ cd $HOME/wave
 
 This needs to be running for the app to work. So leave the terminal with waved running and open a new one to do the rest of the setup
 
-**0.** Install perl 
+**0.** Install perl. I use bpRNA to generate features so you will need perl to run it
 
 ```bash
 curl -L http://xrl.us/installperlnix | bash
