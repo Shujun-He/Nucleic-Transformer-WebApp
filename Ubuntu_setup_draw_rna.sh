@@ -12,4 +12,4 @@ cd draw_rna_pkg && python setup.py install;
 cd ..
 chmod u+x run.sh
 cat Virus_Inference/best_weights/segmenta* > Virus_Inference/best_weights/fold0top1.ckpt
-tar -xzvf MultiRNAFold-2.1.tar.gz
+unzip MultiRNAFold.zip
