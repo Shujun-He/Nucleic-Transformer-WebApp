@@ -47,7 +47,7 @@ class RNA_Inference():
             model=NucleicTransformer(15, 5, 256, 32, 1024, 5, True, kmers=[5],return_aw=True).to(self.device)
 
             weights_path=f"{path}/fold{i}top1.ckpt"
-            checkpoint=torch.load(weights_path)
+            checkpoint=torch.load(weights_path,map_location=self.device)
             model=nn.DataParallel(model)
             model.load_state_dict(checkpoint)
             model.eval()
