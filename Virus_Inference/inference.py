@@ -58,7 +58,7 @@ class Virus_Inference():
         model=NucleicTransformer(4, 2, 512, 8, 2048, 6, True, kmers=[13],return_aw=True).to(self.device)
         model=nn.DataParallel(model)
         weights_path=f"{path}/fold0top1.ckpt"
-        checkpoint=torch.load(weights_path)
+        checkpoint=torch.load(weights_path,map_location=self.device)
         model.load_state_dict(checkpoint)
         model.eval()
         self.models.append(model)
