@@ -58,7 +58,7 @@ class Promoter_Inference():
             model=NucleicTransformer(4, 2, 256, 8, 1024, 6, True, kmers=[7],return_aw=True).to(self.device)
 
             weights_path=f"{path}/fold{i}top1.ckpt"
-            checkpoint=torch.load(weights_path)
+            checkpoint=torch.load(weights_path,map_location=self.device)
             model.load_state_dict(checkpoint)
             model.eval()
             self.models.append(model)
