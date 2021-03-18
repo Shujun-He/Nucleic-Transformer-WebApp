@@ -1,6 +1,6 @@
 # Nucleic-Transformer-WebApp
 
-Based on https://github.com/fatihozturkh2o/explorna_wave
+Inspired by https://github.com/fatihozturkh2o/explorna_wave
 
 Clone the repo to your local.
 
