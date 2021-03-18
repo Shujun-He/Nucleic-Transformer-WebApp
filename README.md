@@ -1,5 +1,8 @@
 # Nucleic-Transformer-WebApp
 
+![home_page](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/home_page.png)
+
+
 Inspired by https://github.com/fatihozturkh2o/explorna_wave
 
 Clone the repo to your local.
