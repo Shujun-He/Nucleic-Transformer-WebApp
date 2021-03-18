@@ -2,7 +2,7 @@
 
 
 
-I made this web application (spired by https://github.com/fatihozturkh2o/explorna_wave
+I made this web application (inspired by https://github.com/fatihozturkh2o/explorna_wave
 ) using h2o's wave so that models in my paper (https://www.biorxiv.org/content/10.1101/2021.01.28.428629v1) can be used easily. In addition, if your computer is too slow to run the app, you can also use Kaggle notebooks (you get 40 free GPU hours per week) I created do use the models:
 
 https://www.kaggle.com/shujun717/nucleic-transformer-promoter-inference <br />
