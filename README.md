@@ -5,10 +5,9 @@
 I made this web application (spired by https://github.com/fatihozturkh2o/explorna_wave
 )sing h2o's wave so that models in my paper (https://www.biorxiv.org/content/10.1101/2021.01.28.428629v1) can be used easily. In addition, if your computer is too slow to run the app, you can also use Kaggle notebooks I created do use the models:
 
-https://www.kaggle.com/shujun717/nucleic-transformer-promoter-inference
-https://www.kaggle.com/shujun717/nucleic-transformer-virus-inference
-
-https://www.kaggle.com/shujun717/nucleic-transformer-rna-degradation-inference
+https://www.kaggle.com/shujun717/nucleic-transformer-promoter-inference <br />
+https://www.kaggle.com/shujun717/nucleic-transformer-virus-inference <br />
+https://www.kaggle.com/shujun717/nucleic-transformer-rna-degradation-inference <br />
 
 ## Showcase
 
@@ -16,12 +15,15 @@ https://www.kaggle.com/shujun717/nucleic-transformer-rna-degradation-inference
 ![home_page](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/home_page.png)
 
 ### Promoter classification
+Here you can classify DNA promoters and visualize the top kmers
 ![Promoter](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/promoter_page.png)
 
 ### Virus classification
+Here you can classify DNA virus and visualize the top kmers
 ![Virus](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/virus_page.png)
 
 ### RNA degradation prediction
+In this page you can predict RNA degradation at each nucleotide and visualize the attention weights of the Nucleic Transformer
 ![RNA degradation](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/rna_page.png)
 
 
