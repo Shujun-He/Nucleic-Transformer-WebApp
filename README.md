@@ -14,10 +14,20 @@ https://www.kaggle.com/shujun717/nucleic-transformer-rna-degradation-inference
 ### Home page
 ![home_page](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/home_page.png)
 
+### Promoter classification
+![Promoter](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/promoter_page.png)
+
+### Virus classification
+![Virus](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/virus_page.png)
+
+### RNA degradation prediction
+![RNA degradation](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/rna_page.png)
 
 
 
 
+
+## How to run
 Clone the repo to your local.
 
 Before everything make sure that wave is ready. 
