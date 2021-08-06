@@ -31,7 +31,7 @@ In this page you can predict RNA degradation at each nucleotide and visualize th
 
 
 ## How to run
-Clone the repo to your local.
+Clone the repo to your local. This should be run on a Linux Machine.
 
 Before everything make sure that wave is ready. 
 For instructions on installation: https://h2oai.github.io/wave/docs/installation/ 
