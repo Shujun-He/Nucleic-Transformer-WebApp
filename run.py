@@ -407,7 +407,7 @@ async def predict_rna_tab(q):
         ui.text_m(f'In this section, you can directly type a sequence and get predictions for the following targets: {target_columns}.'),
         ui.text_m(f'Additional features will be generated automatically and we will visulize the RNA folding and \
         attention weights of the Nucleic Transformer for you as well'),
-        ui.textbox(name='rna_sequence_textbox', label='Sequence', value="GGAAAAGCUCUAAUAACAGGAGACUAGGACUACGUAUUUCUAGGUAACUGGAAUAACCCAUACCAGCAGUUAGAGUUCGCUCUAACAAAAGAAACAACAACAACAAC"),
+        ui.textbox(name='rna_sequence_textbox', label='Sequence', value=q.args.rna_sequence_textbox or "GGAAAAGCUCUAAUAACAGGAGACUAGGACUACGUAUUUCUAGGUAACUGGAAUAACCCAUACCAGCAGUUAGAGUUCGCUCUAACAAAAGAAACAACAACAACAAC"),
         ui.button(name='predict_rna', label='Predict', primary=True),
         ui.text_s(f'You can enter in following formats: '),
         ui.text_s(f'Sequence characters: A,U,C,G'),
