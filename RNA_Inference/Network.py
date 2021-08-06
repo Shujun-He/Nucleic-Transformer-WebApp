@@ -227,7 +227,7 @@ class NucleicTransformer(nn.Module):
             self.transformer_encoder.append(ConvTransformerEncoderLayer(ninp, nhead, nhid, dropout, k=kmers[0]-i))
         self.transformer_encoder= nn.ModuleList(self.transformer_encoder)
         self.encoder = nn.Embedding(ntoken, ninp)
-        self.projection = nn.Linear(ninp*3, ninp)
+        #self.projection = nn.Linear(ninp*2, ninp)
         #self.directional_encoder = nn.Embedding(3, ninp//8)
         self.ninp = ninp
         self.decoder = nn.Linear(ninp,nclass)
@@ -241,8 +241,8 @@ class NucleicTransformer(nn.Module):
 
         self.pretrain_decoders=nn.ModuleList()
         self.pretrain_decoders.append(nn.Linear(ninp,4))
-        self.pretrain_decoders.append(nn.Linear(ninp,3))
-        self.pretrain_decoders.append(nn.Linear(ninp,7))
+        # self.pretrain_decoders.append(nn.Linear(ninp,3))
+        # self.pretrain_decoders.append(nn.Linear(ninp,7))
 
     def _generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
@@ -250,10 +250,10 @@ class NucleicTransformer(nn.Module):
         return mask
 
     def forward(self, src, mask=None):
-        B,L,_=src.shape
-        src = src
+        B,L=src.shape
+        #src = src
         src = self.encoder(src).reshape(B,L,-1)
-        src =self.projection(src)
+        #src =self.projection(src)
         #src = self.pos_encoder(src.permute(1,0,2)).permute(1,0,2)
 
         #mask=mask.unsqueeze(1)

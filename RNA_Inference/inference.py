@@ -15,8 +15,8 @@ def preprocess_inputs(sequence, structures, loops):
     for j in range(len(structures)):
         input_seq=np.asarray([tokens.index(s) for s in sequence])
         input_structure=np.asarray([tokens.index(s) for s in structures[j]])
-        input_loop=np.asarray([tokens.index(s) for s in loops[j]])
-        input.append(np.stack([input_seq,input_structure,input_loop],-1))
+        #input_loop=np.asarray([tokens.index(s) for s in loops[j]])
+        input.append(np.stack([input_seq,input_structure],-1))
     input=np.asarray(input).astype('int')
     return input
 
@@ -82,7 +82,7 @@ class RNA_Inference():
                     distance_mask=torch.tensor(get_distance_mask(src.shape[0])).float().to(self.device)
 
                     bpp=torch.cat([bpp.unsqueeze(0),distance_mask],0)
-                    output,aw=model(src.unsqueeze(0),bpp.unsqueeze(0))
+                    output,aw=model(src[:,0].unsqueeze(0),bpp.unsqueeze(0))
 
                     outputs.append(output.squeeze().cpu().numpy())
                     aws.append(aw.squeeze().mean(0).cpu().numpy())
