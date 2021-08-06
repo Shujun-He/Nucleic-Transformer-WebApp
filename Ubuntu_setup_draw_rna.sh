@@ -1,5 +1,4 @@
 git clone https://github.com/DasLab/arnie arnie;
-git clone https://github.com/hendrixlab/bpRNA bpRNA;
 cd arnie && git reset --hard bdb7f803fe24273c34b3402c3d18036d9bfc882e;
 cd ..;
 echo "TMP: tmp" > arnie.conf;
