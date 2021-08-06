@@ -39,9 +39,9 @@ def generate_RNA_features(sequence, pkg='rnasoft',Ts=[37,50]):
 
     loops=[]
     for j in range(len(structures)):
-        result=get_predicted_loop_type(sequence, structures[j], debug=False)
-        loop=result[5]
-        loops.append(loop)
+        # result=get_predicted_loop_type(sequence, structures[j], debug=False)
+        # loop=result[5]
+        loops.append('X')
 
     return bp_matrix_seq, structures, loops
 
