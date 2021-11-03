@@ -1,5 +1,6 @@
 # Nucleic-Transformer-WebApp
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5643749.svg)](https://doi.org/10.5281/zenodo.5643749)
 
 
 I made this web application (inspired by https://github.com/fatihozturkh2o/explorna_wave
