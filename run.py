@@ -36,7 +36,7 @@ target_columns = [ 'reactivity', 'deg_Mg_pH10',
        'deg_pH10', 'deg_Mg_50C', 'deg_50C']
 
 logo_file = "files/logo.png"
-image_1_path = "files/NT_architecture.png"
+image_1_path = "files/RNAdegformer.png"
 image_2_path = "files/image_2_path.png"
 image_3_path = "files/image_3_path.png"
 image_4_path = "files/image_4_path.png"
@@ -129,21 +129,29 @@ async def delete_pages(q: Q,keep_nav=False):
 
 async def display_nav(q: Q):
 
+    # q.page['nav'] = ui.tab_card(
+    #     box='3 1 9 1',
+    #     items=[
+    #         ui.tab(name='#home', label='Home'),
+    #         ui.tab(name='#promoter_prediction', label='Promoter Classification'),
+    #         ui.tab(name='#virusprediction', label='Virus Prediction'),
+    #         ui.tab(name='#rnaprediction', label='RNA Degradation Prediction'),
+    #     ],
+    #     link=False
+    # )
+
     q.page['nav'] = ui.tab_card(
         box='3 1 9 1',
         items=[
             ui.tab(name='#home', label='Home'),
-            ui.tab(name='#promoter_prediction', label='Promoter Classification'),
-            ui.tab(name='#virusprediction', label='Virus Prediction'),
             ui.tab(name='#rnaprediction', label='RNA Degradation Prediction'),
         ],
         link=False
     )
 
-
     q.page['header2'] = ui.header_card(
         box='1 1 2 1',
-        title='Nucleic Transformer',
+        title='RNAdegformer',
         subtitle='',
         icon='ExploreData',
         icon_color='$orange',
@@ -525,13 +533,12 @@ async def rna_model_predict(q):
 async def home(q):
     home_text = f'''
 
-The Nucleic Transformer models are deep learning models developed to study and understand DNA/RNA usings public available datasets. You can check out [the paper on bioarxiv](https://www.biorxiv.org/content/10.1101/2021.01.28.428629v1)
-and [open-sourced code on github](https://github.com/Shujun-He/Nucleic-Transformer). The model archiecture is simple but effective, outperforming previous results in DNA promoters/virus classification; additionally,
-we used it to to place 7th in the [OpenVaccine challenge](https://www.kaggle.com/c/stanford-covid-vaccine).
+The RNAdegformer is a deep learning model developed to study and understand RNA degradation. The model archiecture is simple but effective, and
+we used it to to place 7th during the [OpenVaccine challenge](https://www.kaggle.com/c/stanford-covid-vaccine) and outperform the top solution with a semi-supervised version later.
 
-Throughout the app, you will be able to use pretrained Nucleic Transformer models to classify DNA promoters/virus and quantify RNA degradation. Also,
+Throughout the app, you will be able to use trained RNAdegformer models to quantify RNA degradation and visualize their secondary structure. Also,
 Nucleic Transformer is very interpretible so you will be able to visualize the attention of the neural networks and understand what the neural network is looking at/for while making predictions.
-This also allows extraction of k-mer promoter/viral motifs and informed decision making when using these neural networks.
+This also allows informed decision making when using these neural networks.
 
 ![Plot]({q.app.home_image_1_url})
 

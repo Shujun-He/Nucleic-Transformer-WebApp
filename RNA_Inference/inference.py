@@ -34,8 +34,8 @@ def get_distance_mask(L):
 
 class RNA_Inference():
     def __init__(self):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+        #self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
 
     def load_models(self, path):
         self.models=[]
@@ -44,12 +44,13 @@ class RNA_Inference():
             #                        opts.nlayers, opts.kmer_aggregation, kmers=[opts.kmers],
             #                        dropout=opts.dropout).to(device)
 
-            model=NucleicTransformer(15, 5, 256, 32, 1024, 5, True, kmers=[5],return_aw=True).to(self.device)
+            model=NucleicTransformer(15, 5, 256, 32, 1024, 5, True, kmers=[5],return_aw=True)#.to(self.device)
 
             weights_path=f"{path}/fold{i}top1.ckpt"
             checkpoint=torch.load(weights_path,map_location=self.device)
             model=nn.DataParallel(model)
             model.load_state_dict(checkpoint)
+            model=model.module.cpu()
             model.eval()
             self.models.append(model)
 
@@ -76,17 +77,19 @@ class RNA_Inference():
         with torch.no_grad():
             for model in self.models:
                 for j in range(len(bp_matrix_seq)):
-                    src=torch.tensor(inputs[j]).long().to(self.device)
-                    bpp=torch.tensor(bp_matrix_seq[j]).float().to(self.device)
+                    src=torch.tensor(inputs[j]).long()#.to(self.device)
+                    bpp=torch.tensor(bp_matrix_seq[j]).float()#.to(self.device)
 
-                    distance_mask=torch.tensor(get_distance_mask(src.shape[0])).float().to(self.device)
+                    distance_mask=torch.tensor(get_distance_mask(src.shape[0])).float()#.to(self.device)
 
                     bpp=torch.cat([bpp.unsqueeze(0),distance_mask],0)
                     output,aw=model(src[:,0].unsqueeze(0),bpp.unsqueeze(0))
 
-                    outputs.append(output.squeeze().cpu().numpy())
-                    aws.append(aw.squeeze().mean(0).cpu().numpy())
+                    #outputs.append(output.squeeze().cpu().numpy())
+                    #aws.append(aw.squeeze().mean(0).cpu().numpy())
 
+                    outputs.append(output.squeeze().numpy())
+                    aws.append(aw.squeeze().mean(0).numpy())
                     # plt.subplot(1,2,1)
                     # plt.imshow(bpp.squeeze()[0].cpu().numpy())
                     # plt.subplot(1,2,2)
