@@ -34,8 +34,8 @@ In this page you can predict RNA degradation at each nucleotide and visualize th
 ## How to run
 Clone the repo to your local. Preferably, This should be run on a Linux Machine (I recommend Ubuntu).
 
-Before everything make sure that wave is ready. 
-For instructions on installation: https://wave.h2o.ai/docs/installation 
+Before everything make sure that wave is ready.
+For instructions on installation: https://wave.h2o.ai/docs/installation
 Use this version of wave: https://github.com/h2oai/wave/releases/tag/v0.10.0
 
 Start the server with
@@ -50,7 +50,7 @@ This needs to be running for the app to work. So leave the terminal with waved r
 
 **1.** Open terminal in the cloned folder and run: <code>make setup</code>
 
-**2.** Then run the bash file: for Ubuntu: <code>bash Ubuntu_setup_draw_rna.sh</code> , for Mac: <code>bash MacOS_setup_draw_rna.sh</code>
+**2.** Then run the bash file: for Ubuntu: <code>bash Ubuntu_setup.sh</code> , for Mac: <code>bash MacOS_setup.sh</code>
 
 **3.** Now you are ready to run the app: <code>./venv/bin/python run.py</code>   
 

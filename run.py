@@ -5,7 +5,6 @@ import sys
 sys.path.append('draw_rna_pkg/')
 from h2o_wave import Q, listen, ui
 import matplotlib.pyplot as plt
-from ipynb.draw import draw_struct
 import os
 import io
 import base64
