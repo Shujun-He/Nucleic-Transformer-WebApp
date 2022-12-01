@@ -18,10 +18,8 @@ import time
 os.environ["ARNIEFILE"] = f"arnie.conf"
 
 
-from rna_analysis import *
 from dna_analysis import *
 import Promoter_Inference
-import RNA_Inference
 import Virus_Inference
 
 #from model_prediction import load_models,bpps_path,get_prediction_df_dict,bpps_check
@@ -135,7 +133,6 @@ async def display_nav(q: Q):
             ui.tab(name='#home', label='Home'),
             ui.tab(name='#promoter_prediction', label='Promoter Classification'),
             ui.tab(name='#virusprediction', label='Virus Prediction'),
-            ui.tab(name='#rnaprediction', label='RNA Degradation Prediction'),
         ],
         link=False
     )
