@@ -20,6 +20,7 @@ os.environ["ARNIEFILE"] = f"arnie.conf"
 from dna_analysis import *
 import Promoter_Inference
 import Virus_Inference
+import Enhancer_Inference
 
 #from model_prediction import load_models,bpps_path,get_prediction_df_dict,bpps_check
 
@@ -131,6 +132,7 @@ async def display_nav(q: Q):
         items=[
             ui.tab(name='#home', label='Home'),
             ui.tab(name='#promoter_prediction', label='Promoter Classification'),
+            ui.tab(name='#enhancer_prediction', label='Enhancer Classification'),
             ui.tab(name='#virusprediction', label='Virus Prediction'),
         ],
         link=False
@@ -287,6 +289,117 @@ Inference complete! Click [here]({{predictions}}) to download the predictions! L
             q.client.all_pages.append('plot_promoter_kmers')
 
 
+async def enhancer_model_predict(q):
+
+    # Loading models
+    start_time_main = time.time()
+
+    if q.client.models_loaded is None:
+        q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                          items=[ui.progress(label="Loading models...")])
+        await q.page.save()
+        del q.page['progress']
+        q.client.enhancer_inference=Enhancer_Inference.Enhancer_Inference()
+        q.client.enhancer_inference.load_models('Enhancer_Inference/best_weights')
+        q.client.models_loaded=True
+
+    # Getting predictions
+    #if q.client.predictions is None:
+    minimum_required_features = ["sequence"]
+    #await progress_page(q,message="Getting predictions...")
+
+    q.page['progress'] = ui.form_card(box='4 6 9 1',
+                                      items=[ui.progress(label="Getting predictions...")])
+    await q.page.save()
+    del q.page['progress']
+
+    q.client.enhancer_predictions, q.client.top_kmers, q.client.top_kmer_counts = \
+    q.client.enhancer_inference.predict(q.client.enhancer_data.loc[:, minimum_required_features])
+    q.client.enhancer_predictions.to_csv('temp/enhancer_predictions.csv', index=False)
+    q.client.predictions_path, = await q.site.upload(['temp/enhancer_predictions.csv'])
+
+    elapsed_time = time.time() - start_time_main
+    print(f"minutes passed for getting predictions: {round(elapsed_time/60, 2)}")
+
+
+async def predict_enhancer_tab(q):
+    if q.client.enhancer_topk is not None:
+        k_value=q.client.enhancer_topk
+    else:
+        k_value=10
+
+    if q.client.enhancer_data is None:
+        q.client.enhancer_file="enhancer_sample.csv"
+        q.client.enhancer_data = pd.read_csv('Enhancer_Inference/'+q.client.enhancer_file)
+        q.client.enhancer_data["sequence_length"] = q.client.enhancer_data["sequence"].apply(lambda seq: len(seq))
+
+
+
+    #if q.client.predictions is not None:
+    q.page['predict_enhancer_tab'] = ui.form_card(box='1 2 3 11', items=[
+        ui.text_m(f'In this section, you can classify DNA enhancers'),
+        ui.text_m('You can upload a local dataset to classify with the Nucleic Transformer. You need to put \
+        the sequences\
+        into a csv file with \'sequence\' as a column. We have uploaded a sample file for you so you can follow \
+        the format easily'),
+        ui.file_upload(name='enhancer_user_files', label='Upload', multiple=False),
+        ui.text_m('Aside from classifying enhancers, you can also visualize the top kmers extracted based on \
+        Nucleic Trasnformer\'s self-attention weights'),
+        ui.slider(name='enhancer_topk', label='Select number of top kmers to visualize', min=3, max=10, step=1, value=k_value),
+        ui.button(name='predict_enhancer', label='Predict', primary=True)
+    ])
+
+
+    #if q.client.enhancer_data is not None:
+
+    data_items = [ui.text_m(f'Loaded file "{q.client.enhancer_file}" has '
+                            f'**{q.client.enhancer_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+                  make_ui_table(q.client.enhancer_data, data_display_max_nrows)]
+    q.page['enhancer_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+
+    if 'enhancer_data_view' not in q.client.all_pages:
+        q.client.all_pages.append('enhancer_data_view')
+
+    if q.client.enhancer_predictions is not None:
+
+        download_data_text = '''=
+Inference complete! Click [here]({{predictions}}) to download the predictions! Look below for visualization of enhancer composition and top kmers!
+'''
+        q.page['download_enhancer_predictions'] = ui.markdown_card(
+                box='4 6 9 1',
+                title='',
+                content=download_data_text,
+                data=dict(predictions=q.client.predictions_path)
+            )
+        q.client.enhancer_data_predictions_seq_length= plot_enhancer_percent(q.client.enhancer_predictions)
+
+        q.page['plot_enhancers'] = ui.frame_card(
+            box='4 7 4 6',
+            title='How many enhancers/non-enhancers are in the dataset',
+            content=q.client.enhancer_data_predictions_seq_length
+        )
+
+        if 'download_enhancer_predictions' not in q.client.all_pages:
+            q.client.all_pages.append('download_enhancer_predictions')
+
+        if 'plot_enhancers' not in q.client.all_pages:
+            q.client.all_pages.append('plot_enhancers')
+
+        q.client.enhancer_topk_plot=plot_top_enhancer_kmers(q.client.top_kmers, q.client.top_kmer_counts, q.client.enhancer_topk)
+
+
+
+        q.page['plot_enhancer_kmers'] = ui.frame_card(
+            box='8 7 5 6',
+            title='Top enhancer kmers extracted from attention weights',
+            content=q.client.enhancer_topk_plot
+        )
+
+
+        if 'plot_enhancer_kmers' not in q.client.all_pages:
+            q.client.all_pages.append('plot_enhancer_kmers')
+
+
 async def predict_virus_tab(q):
     if q.client.virus_topk is not None:
         k_value=q.client.virus_topk
@@ -398,124 +511,6 @@ async def virus_model_predict(q):
     print(f"minutes passed for getting predictions: {round(elapsed_time/60, 2)}")
 
 
-async def predict_rna_tab(q):
-    ui_list_custom = [
-        ui.text_m(f'In this section, you can directly type a sequence and get predictions for the following targets: {target_columns}.'),
-        ui.text_m(f'Additional features will be generated automatically and we will visulize the RNA folding and \
-        attention weights of the Nucleic Transformer for you as well'),
-        ui.textbox(name='rna_sequence_textbox', label='Sequence', value=q.args.rna_sequence_textbox or "GGAAAAGCUCUAAUAACAGGAGACUAGGACUACGUAUUUCUAGGUAACUGGAAUAACCCAUACCAGCAGUUAGAGUUCGCUCUAACAAAAGAAACAACAACAACAAC"),
-        ui.button(name='predict_rna', label='Predict', primary=True),
-        ui.text_s(f'You can enter in following formats: '),
-        ui.text_s(f'Sequence characters: A,U,C,G'),
-    ]
-    q.page['text'] = ui.form_card( box='1 2 3 4',items=ui_list_custom )
-
-    if q.args.rna_sequence_textbox is not None:
-        q.client.rna_sequence_textbox=q.args.rna_sequence_textbox
-
-    if q.client.rna_predictions is not None and q.client.rna_sequence_textbox is not None:
-
-        # q.client.rna_drawn_html_pos = position_based_plot_single(q.client.rna_predictions, target_columns, size=500)
-        # q.page['plot_seqpos'] = ui.frame_card(
-        #     box='4 2 9 4',
-        #     title='Average prediction value plots for each sequence position.',
-        #     content=q.client.rna_predictions_html_pos
-        # )
-
-
-
-        q.client.rna_predictions_html_pos = position_based_plot_single(q.client.rna_predictions, target_columns, size=500)
-        q.page['plot_seqpos'] = ui.frame_card(
-            box='4 7 9 6',
-            title='Average prediction value plots for each sequence position.',
-            content=q.client.rna_predictions_html_pos
-        )
-
-        draw_struct(q.client.rna_sequence_textbox, q.client.rna_input_features['structures'][0], c=None, ax=None,file_name='rna_plot')
-        image = get_image(file_name='rna_plot')
-
-        #image_path_list = [f"temp/{custom_id}.png"]
-        #compress(image_path_list)
-        # Deleting previously generated plots after compressing them.
-        # for path in image_path_list:
-        #     os.remove(path)
-
-        #q.client.plots_path, = await q.site.upload([f'temp/plots.zip'])
-
-        q.page['image1'] = ui.image_card(
-            box=f'4 2 4 5',
-            title=f'RNA Visualization',
-            type='png',
-            image=image)
-
-        q.client.rna_aw_html = plot_aw(q.client.rna_aw, size=500)
-
-        q.page['aw_image'] = ui.frame_card(
-            box=f'8 2 5 5',
-            title=f'Attetion weight of the Nucleic Transformer',
-            content=q.client.rna_aw_html)
-
-        q.client.all_pages.append("image1")
-        q.client.all_pages.append("aw_image")
-
-        download_data_text = '''=
-        Inference complete! Click [here]({{predictions}}) to download the predictions!
-        '''
-        # q.page['download_rna_predictions'] = ui.markdown_card(
-        #         box='8 2 5 5',
-        #         title='',
-        #         content=download_data_text,
-        #         data=dict(predictions=q.client.rna_predictions_path)
-        #     )
-
-        download_data_text = '''=
-Inference complete! Click [here]({{predictions}}) to download the predictions!
-'''
-        q.page['download_promoter_predictions'] = ui.markdown_card(
-                box='1 6 3 1',
-                title='',
-                content=download_data_text,
-                data=dict(predictions=q.client.rna_predictions_path)
-            )
-
-
-async def rna_model_predict(q):
-
-    # Loading models
-    start_time_main = time.time()
-
-    if q.client.rna_models_loaded is None:
-        q.page['progress'] = ui.form_card(box='4 6 9 1',
-                                          items=[ui.progress(label="Loading models...")])
-        await q.page.save()
-        del q.page['progress']
-        q.client.rna_inference=RNA_Inference.RNA_Inference()
-        q.client.rna_inference.load_models('RNA_Inference/best_weights')
-        q.client.rna_models_loaded=True
-
-    # Getting predictions
-    #if q.client.predictions is None:
-    #minimum_required_features = ["sequence"]
-    #await progress_page(q,message="Getting predictions...")
-
-    q.page['progress'] = ui.form_card(box='4 6 9 1',
-                                      items=[ui.progress(label="Getting predictions...")])
-    await q.page.save()
-    del q.page['progress']
-
-    q.client.rna_predictions, q.client.rna_aw, q.client.rna_input_features  = \
-    q.client.rna_inference.predict(q.args.rna_sequence_textbox)
-    q.client.rna_predictions_df=pd.DataFrame(columns=['position']+target_columns)
-    q.client.rna_predictions_df['position']=np.arange(len(q.client.rna_predictions))
-    q.client.rna_predictions_df[target_columns]=q.client.rna_predictions
-    q.client.rna_predictions_df.to_csv('temp/rna_predictions.csv', index=False)
-    q.client.rna_predictions_path, = await q.site.upload(['temp/rna_predictions.csv'])
-
-    #plt.imshow(q.client.rna_aw)
-    #plt.savefig('temp/aw.png',bbox_inches = 'tight',pad_inches = 0)
-
-    elapsed_time = time.time() - start_time_main
-    print(f"minutes passed for getting predictions: {round(elapsed_time/60, 2)}")
 
 
 async def home(q):
@@ -551,6 +546,12 @@ async def display_data_parameters_page(q,random_sample_disabled=True):
             print('line 546')
 
             #await predict_virus_tab(q)
+    elif q.client.activetab == "enhancer_prediction":
+            await delete_pages(q,keep_nav=True)
+            await predict_enhancer_tab(q)
+            print('line 546')
+
+
     elif q.client.activetab == "virusprediction":
             await delete_pages(q,keep_nav=True)
             await predict_virus_tab(q)
@@ -705,6 +706,13 @@ async def main(q: Q):
         await promoter_model_predict(q)
         print('line 815')
         await predict_promoter_tab(q)
+
+    elif q.args.predict_enhancer:
+        q.client.enhancer_topk = q.args.enhancer_topk
+        await enhancer_model_predict(q)
+        print('line 815')
+        await predict_enhancer_tab(q)
+
 
     elif q.args.predict_rna:
         #q.client.virus_topk = q.args.virus_topk
