@@ -638,24 +638,22 @@ async def main(q: Q):
             elif q.client.link_to_file.endswith('.csv'):
                 q.client.enhancer_data = pd.read_csv(q.client.local_path)
             q.client.fs_columns = list(q.client.enhancer_data.columns.values.tolist())
-            q.client.file_name = os.path.split(q.client.local_path)[1]
-            q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
             q.client.enhancer_data["sequence_length"] = q.client.enhancer_data["sequence"].apply(lambda seq: len(seq))
             print(f"data shape: {q.client.enhancer_data.shape}")
 
-            data_items = [ui.text_m(f'Loaded file "{q.args.enhancer_user_files[0]}" has '
-                                    f'**{q.client.enhancer_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
-                          make_ui_table(q.client.enhancer_data, data_display_max_nrows)]
-            q.page['enhancer_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
-
-            if 'enhancer_data_view' not in q.client.all_pages:
-                q.client.all_pages.append('enhancer_data_view')
-
-            if q.client.enhancer_predictions is not None:
-                q.client.enhancer_predictions=None
-                del q.page['plot_enhancers']
-                del q.page['plot_enhancer_kmers']
-                del q.page['download_enhancer_predictions']
+            # data_items = [ui.text_m(f'Loaded file "{q.args.enhancer_user_files[0]}" has '
+            #                         f'**{q.client.enhancer_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+            #               make_ui_table(q.client.enhancer_data, data_display_max_nrows)]
+            # q.page['enhancer_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+            #
+            # if 'enhancer_data_view' not in q.client.all_pages:
+            #     q.client.all_pages.append('enhancer_data_view')
+            #
+            # if q.client.enhancer_predictions is not None:
+            #     q.client.enhancer_predictions=None
+            #     del q.page['plot_enhancers']
+            #     del q.page['plot_enhancer_kmers']
+            #     del q.page['download_enhancer_predictions']
 
         #except Exception as e: print(e)
         except:
@@ -688,12 +686,14 @@ async def main(q: Q):
             q.client.local_virus_file_path = await q.site.download(q.args.virus_user_files[0], '.')
             q.client.link_to_virus_file = q.args.virus_user_files[0]
 
-            if q.client.link_to_file.endswith('.json'):
-                q.client.virus_data = pd.read_json(q.client.virus_user_files, lines=True)
-            elif q.client.link_to_file.endswith('.csv'):
-                q.client.virus_data = pd.read_csv(q.client.virus_user_files)
+            print(q.client.link_to_virus_file)
+
+            if q.client.link_to_virus_file.endswith('.json'):
+                q.client.virus_data = pd.read_json(q.client.local_virus_file_path, lines=True)
+            elif q.client.link_to_virus_file.endswith('.csv'):
+                q.client.virus_data = pd.read_csv(q.client.local_virus_file_path)
             q.client.fs_columns = list(q.client.virus_data.columns.values.tolist())
-            q.client.virus_file_name = os.path.split(q.client.virus_user_files)[1]
+            q.client.virus_file_name = os.path.split(q.client.local_virus_file_path)[1]
             q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
             q.client.virus_data["sequence_length"] = q.client.virus_data["sequence"].apply(lambda seq: len(seq))
             print(f"data shape: {q.client.virus_data.shape}")
@@ -703,14 +703,14 @@ async def main(q: Q):
                           make_ui_table(q.client.virus_data, data_display_max_nrows)]
             q.page['virus_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
 
-            if 'virus_data_view' not in q.client.all_pages:
-                q.client.all_pages.append('virus_data_view')
+        # if 'virus_data_view' not in q.client.all_pages:
+        #     q.client.all_pages.append('virus_data_view')
 
-            if q.client.virus_predictions is not None:
-                q.client.virus_predictions=None
-                del q.page['plot_virus']
-                del q.page['plot_virus_kmers']
-                del q.page['download_virus_predictions']
+        # if q.client.virus_predictions is not None:
+        #     q.client.virus_predictions=None
+        #     del q.page['plot_virus']
+        #     del q.page['plot_virus_kmers']
+        #     del q.page['download_virus_predictions']
 
         #except Exception as e: print(e)
         except:
