@@ -242,7 +242,7 @@ async def predict_promoter_tab(q):
     #if q.client.promoter_data is not None:
 
     data_items = [ui.text_m(f'Loaded file "{q.client.file_name}" has '
-                            f'**{q.client.promoter_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+                            f'**{q.client.promoter_data.shape[0]}** rows and **{q.client.promoter_data.shape[1]}** features.\n\n'),
                   make_ui_table(q.client.promoter_data, data_display_max_nrows)]
     q.page['promoter_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
 
@@ -294,14 +294,14 @@ async def enhancer_model_predict(q):
     # Loading models
     start_time_main = time.time()
 
-    if q.client.models_loaded is None:
+    if q.client.enhancer_models_loaded is None:
         q.page['progress'] = ui.form_card(box='4 6 9 1',
                                           items=[ui.progress(label="Loading models...")])
         await q.page.save()
         del q.page['progress']
         q.client.enhancer_inference=Enhancer_Inference.Enhancer_Inference()
         q.client.enhancer_inference.load_models('Enhancer_Inference/best_weights')
-        q.client.models_loaded=True
+        q.client.enhancer_models_loaded=True
 
     # Getting predictions
     #if q.client.predictions is None:
@@ -622,6 +622,47 @@ async def main(q: Q):
             await delete_pages(q, keep_nav=True)
             q.page['error'] = ui.form_card(box='1 2 6 2',
                 items=display_error(error_type="upload"))
+
+    if q.args.enhancer_user_files:
+        #await delete_pages(q)
+        try:
+            print('location: upload data')
+            # Make the file available locally and store file path in client context
+            q.client.local_path = await q.site.download(q.args.enhancer_user_files[0], '.')
+            q.client.link_to_file = q.args.enhancer_user_files[0]
+
+            q.client.enhancer_file=q.args.enhancer_user_files[0].split('/')[-1]
+
+            if q.client.link_to_file.endswith('.json'):
+                q.client.enhancer_data = pd.read_json(q.client.local_path, lines=True)
+            elif q.client.link_to_file.endswith('.csv'):
+                q.client.enhancer_data = pd.read_csv(q.client.local_path)
+            q.client.fs_columns = list(q.client.enhancer_data.columns.values.tolist())
+            q.client.file_name = os.path.split(q.client.local_path)[1]
+            q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
+            q.client.enhancer_data["sequence_length"] = q.client.enhancer_data["sequence"].apply(lambda seq: len(seq))
+            print(f"data shape: {q.client.enhancer_data.shape}")
+
+            data_items = [ui.text_m(f'Loaded file "{q.args.enhancer_user_files[0]}" has '
+                                    f'**{q.client.enhancer_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+                          make_ui_table(q.client.enhancer_data, data_display_max_nrows)]
+            q.page['enhancer_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+
+            if 'enhancer_data_view' not in q.client.all_pages:
+                q.client.all_pages.append('enhancer_data_view')
+
+            if q.client.enhancer_predictions is not None:
+                q.client.enhancer_predictions=None
+                del q.page['plot_enhancers']
+                del q.page['plot_enhancer_kmers']
+                del q.page['download_enhancer_predictions']
+
+        #except Exception as e: print(e)
+        except:
+            await delete_pages(q, keep_nav=True)
+            q.page['error'] = ui.form_card(box='1 2 6 2',
+                items=display_error(error_type="upload"))
+
 
     elif q.client.local_path is None:
         #q.client.local_path = "stanford-covid-vaccine/train_small.json"

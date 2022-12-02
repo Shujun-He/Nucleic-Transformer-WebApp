@@ -44,8 +44,7 @@ def get_kmers(sequence,k):
 
 class Virus_Inference():
     def __init__(self):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        pass
+        self.device = 'cpu'
 
 
     def load_models(self, path):
@@ -60,6 +59,7 @@ class Virus_Inference():
         weights_path=f"{path}/fold0top1.ckpt"
         checkpoint=torch.load(weights_path,map_location=self.device)
         model.load_state_dict(checkpoint)
+        model=model.module
         model.eval()
         self.models.append(model)
 
