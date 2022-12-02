@@ -623,7 +623,7 @@ async def main(q: Q):
             q.page['error'] = ui.form_card(box='1 2 6 2',
                 items=display_error(error_type="upload"))
 
-    if q.args.enhancer_user_files:
+    elif q.args.enhancer_user_files:
         #await delete_pages(q)
         try:
             print('location: upload data')
@@ -641,10 +641,10 @@ async def main(q: Q):
             q.client.enhancer_data["sequence_length"] = q.client.enhancer_data["sequence"].apply(lambda seq: len(seq))
             print(f"data shape: {q.client.enhancer_data.shape}")
 
-            # data_items = [ui.text_m(f'Loaded file "{q.args.enhancer_user_files[0]}" has '
-            #                         f'**{q.client.enhancer_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
-            #               make_ui_table(q.client.enhancer_data, data_display_max_nrows)]
-            # q.page['enhancer_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
+            data_items = [ui.text_m(f'Loaded file "{q.client.enhancer_file}" has '
+                                    f'**{q.client.enhancer_data.shape[0]}** rows and **{q.client.train.shape[1]}** features.\n\n'),
+                          make_ui_table(q.client.enhancer_data, data_display_max_nrows)]
+            q.page['enhancer_data_view'] = ui.form_card(box='4 2 9 4', items=data_items)
             #
             # if 'enhancer_data_view' not in q.client.all_pages:
             #     q.client.all_pages.append('enhancer_data_view')
@@ -678,19 +678,17 @@ async def main(q: Q):
         await display_nav(q)
         #await display_file_upload(q)
 
-    if q.args.virus_user_files:
+    elif q.args.virus_user_files:
         #await delete_pages(q)
         try:
             print('location: upload data')
             # Make the file available locally and store file path in client context
             q.client.local_virus_file_path = await q.site.download(q.args.virus_user_files[0], '.')
-            q.client.link_to_virus_file = q.args.virus_user_files[0]
 
-            print(q.client.link_to_virus_file)
 
-            if q.client.link_to_virus_file.endswith('.json'):
+            if q.client.local_virus_file_path.endswith('.json'):
                 q.client.virus_data = pd.read_json(q.client.local_virus_file_path, lines=True)
-            elif q.client.link_to_virus_file.endswith('.csv'):
+            elif q.client.local_virus_file_path.endswith('.csv'):
                 q.client.virus_data = pd.read_csv(q.client.local_virus_file_path)
             q.client.fs_columns = list(q.client.virus_data.columns.values.tolist())
             q.client.virus_file_name = os.path.split(q.client.local_virus_file_path)[1]
