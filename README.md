@@ -12,7 +12,7 @@ https://www.kaggle.com/shujun717/nucleic-transformer-virus-inference <br />
 ## Showcase
 
 ### Home page
-![home_page](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/home_page.png)
+![home_page](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/DNA_only/files/home_page.png)
 
 ### Promoter classification
 Here you can classify DNA promoters and visualize the top kmers
