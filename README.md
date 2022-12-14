@@ -22,9 +22,9 @@ Here you can classify DNA promoters and visualize the top kmers
 Here you can classify DNA virus and visualize the top kmers
 ![Virus](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/virus_page.png)
 
-### RNA degradation prediction
+### Enhancer prediction
 In this page you can predict RNA degradation at each nucleotide and visualize the attention weights of the Nucleic Transformer
-![RNA degradation](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/main/files/rna_page.png)
+![RNA degradation](https://github.com/Shujun-He/Nucleic-Transformer-WebApp/blob/DNA_only/files/enhancer_classification.png)
 
 
 
