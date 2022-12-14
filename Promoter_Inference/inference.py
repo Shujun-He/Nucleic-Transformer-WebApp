@@ -44,8 +44,7 @@ def get_kmers(sequence,k):
 
 class Promoter_Inference():
     def __init__(self):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        pass
+        self.device = 'cpu'
 
 
     def load_models(self, path):
