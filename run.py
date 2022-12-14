@@ -516,13 +516,11 @@ async def virus_model_predict(q):
 async def home(q):
     home_text = f'''
 
-The Nucleic Transformer models are deep learning models developed to study and understand DNA/RNA usings public available datasets. You can check out [the paper on bioarxiv](https://www.biorxiv.org/content/10.1101/2021.01.28.428629v1)
-and [open-sourced code on github](https://github.com/Shujun-He/Nucleic-Transformer). The model archiecture is simple but effective, outperforming previous results in DNA promoters/virus classification; additionally,
-we used it to to place 7th in the [OpenVaccine challenge](https://www.kaggle.com/c/stanford-covid-vaccine).
+The Nucleic Transformer models are deep learning models developed to study and understand DNA usings public available datasets. You can check out our [open-sourced code on github](https://github.com/Shujun-He/Nucleic-Transformer). The model archiecture is simple but effective, outperforming previous results in DNA promoters, virus, enhancer, and non coding variants classification
 
-Throughout the app, you will be able to use pretrained Nucleic Transformer models to classify DNA promoters/virus and quantify RNA degradation. Also,
-Nucleic Transformer is very interpretible so you will be able to visualize the attention of the neural networks and understand what the neural network is looking at/for while making predictions.
-This also allows extraction of k-mer promoter/viral motifs and informed decision making when using these neural networks.
+Throughout the app, you will be able to use trained Nucleic Transformer models to classify DNA promoters, virus and enhancer. Also,
+Nucleic Transformer is interpretible so you will be able to visualize the attention of the neural networks and understand what the neural network is looking at/for while making predictions.
+This also allows extraction of k-mer promoter, enhancer, viral motifs and informed decision making when using these neural networks.
 
 ![Plot]({q.app.home_image_1_url})
 
