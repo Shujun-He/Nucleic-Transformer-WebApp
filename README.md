@@ -8,7 +8,6 @@ I made this web application (inspired by https://github.com/fatihozturkh2o/explo
 
 https://www.kaggle.com/shujun717/nucleic-transformer-promoter-inference <br />
 https://www.kaggle.com/shujun717/nucleic-transformer-virus-inference <br />
-https://www.kaggle.com/shujun717/nucleic-transformer-rna-degradation-inference <br />
 
 ## Showcase
 
