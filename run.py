@@ -14,7 +14,6 @@ import time
 
 
 
-os.environ["ARNIEFILE"] = f"arnie.conf"
 
 
 from dna_analysis import *
@@ -407,7 +406,14 @@ async def predict_virus_tab(q):
         k_value=5
 
     if q.client.virus_data is None:
-        q.client.virus_data=q.client.virus_data
+        q.client.local_virus_file_path = "Virus_Inference/virus_sample.csv"
+        #q.client.train = pd.read_json(q.client.local_path, lines=True)
+        q.client.virus_data = pd.read_csv(q.client.local_virus_file_path)
+        q.client.fs_columns = list(q.client.train.columns.values.tolist())
+        q.client.virus_file_name = os.path.split(q.client.local_virus_file_path)[1]
+        #q.client.activetab = "home"
+        q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
+        q.client.virus_data["sequence_length"] = q.client.virus_data["sequence"].apply(lambda seq: len(seq))
 
 
 
@@ -535,6 +541,8 @@ async def display_data_parameters_page(q,random_sample_disabled=True):
     # Add navigation buttons
     print(q.args["#"])
 
+    #print("display_data_parameters_page")
+    #print(q.client.activetab)
     if q.client.activetab == "home":
             await delete_pages(q,keep_nav=True)
             await home(q)
@@ -581,6 +589,11 @@ async def main(q: Q):
 
     if not q.app.home_image_4:
         q.app.home_image_4_url, = await q.site.upload([image_4_path])
+
+
+    if q.client.activetab is None:
+        q.client.activetab='home'
+
 
 
     if q.args.promoter_user_files:
@@ -667,7 +680,7 @@ async def main(q: Q):
         q.client.train = pd.read_csv(q.client.local_path)
         q.client.fs_columns = list(q.client.train.columns.values.tolist())
         q.client.file_name = os.path.split(q.client.local_path)[1]
-        q.client.activetab = "home"
+        #q.client.activetab = "home"
         q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
         q.client.train["sequence_length"] = q.client.train["sequence"].apply(lambda seq: len(seq))
 
@@ -721,7 +734,7 @@ async def main(q: Q):
         q.client.virus_data = pd.read_csv(q.client.local_virus_file_path)
         q.client.fs_columns = list(q.client.train.columns.values.tolist())
         q.client.virus_file_name = os.path.split(q.client.local_virus_file_path)[1]
-        q.client.activetab = "home"
+        #q.client.activetab = "home"
         q.client.target_columns = [col for col in target_columns if col in q.client.train.columns]
         q.client.virus_data["sequence_length"] = q.client.virus_data["sequence"].apply(lambda seq: len(seq))
 
@@ -763,12 +776,21 @@ async def main(q: Q):
         print('line 815')
         await predict_virus_tab(q)
 
-    elif q.args["#"]:
-        q.client.activetab = q.args["#"]
-        await display_data_parameters_page(q)
 
-    else:
-        print("location: else")
+    # elif q.args["#"]:
+    #     q.client.activetab = q.args["#"]
+    #     print("q.args")
+    #     print(q.client.activetab)
+    #     await display_data_parameters_page(q)
+    #
+    # else:
+    #     print("location: else")
+    #     await display_data_parameters_page(q)
+
+    if q.args["#"]:
+        q.client.activetab = q.args["#"]
+        print("q.args")
+        print(q.client.activetab)
         await display_data_parameters_page(q)
 
     await q.page.save()
